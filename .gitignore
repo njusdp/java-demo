@@ -1,0 +1,6 @@
+.DS_Store
+*.xml
+.idea*
+*.iml
+src/main/resources/*
+target/*
