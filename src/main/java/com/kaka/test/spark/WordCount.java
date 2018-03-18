@@ -8,6 +8,7 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.api.java.function.VoidFunction;
+import org.apache.spark.sql.catalyst.expressions.IntegerLiteral;
 import scala.Tuple2;
 
 import java.util.ArrayList;
@@ -58,6 +59,9 @@ public class WordCount {
          * 第4步：对初始的JavaRDD进行Transformation级别的处理，例如map、filter等高阶函数等的编程，来进行具体的数据计算
          * 第4.1步：讲每一行的字符串拆分成单个的单词
          */
+        JavaRDD<String> words = lines.flatMap(s -> Arrays.asList(s.split(" ")).iterator())
+                .filter(word -> !word.isEmpty());
+        /*
         JavaRDD<String> words = lines.flatMap(new FlatMapFunction<String, String>() {
             @Override
             public Iterator<String> call(String s) throws Exception {
@@ -67,7 +71,7 @@ public class WordCount {
                 Iterator<String> its = Arrays.asList(ws).iterator();
                 return its;
             }
-        });
+        });*/
 
         /*JavaRDD<String> words = lines
                 .flatMap(new FlatMapFunction<String, String>() { // 如果是Scala，由于SAM转换，所以可以写成val
@@ -86,28 +90,61 @@ public class WordCount {
          * 第4.2步：在单词拆分的基础上对每个单词实例计数为1，也就是word => (word, 1)
          */
         JavaPairRDD<String, Integer> pairs = words
+                .mapToPair(word -> new Tuple2<String, Integer>(word,1));
+
+       /*
+        JavaPairRDD<String, Integer> pairs = words
                 .mapToPair(new PairFunction<String, String, Integer>() {
                     public Tuple2<String, Integer> call(String word)
                             throws Exception {
                         return new Tuple2<String, Integer>(word, 1);
                     }
                 });
+                */
         /**
          * 第4步：对初始的RDD进行Transformation级别的处理，例如map、filter等高阶函数等的编程，来进行具体的数据计算
          * 第4.3步：在每个单词实例计数为1基础之上统计每个单词在文件中出现的总次数
          */
-        JavaPairRDD<String, Integer> wordsCount = pairs
+        JavaPairRDD<String, Integer> wordsCount = pairs.reduceByKey(
+                (v1, v2) -> v1 + v2
+        );
+        /*JavaPairRDD<String, Integer> wordsCount = pairs
                 .reduceByKey(new Function2<Integer, Integer, Integer>() { // 对相同的Key，进行Value的累计（包括Local和Reducer级别同时Reduce）
                     public Integer call(Integer v1, Integer v2)
                             throws Exception {
                         return v1 + v2;
                     }
-                });
+                });*/
+
+        //JavaPairRDD<String, Integer> wc2 = wordsCount.sortByKey();
+
+        /**
+         * 为了实现按word排序,把key和value倒置,返回新的RDD
+         */
+        JavaPairRDD<Integer, String> keyValueConvertPairRDD = wordsCount.mapToPair(
+                tuple2 -> new Tuple2<Integer, String>(tuple2._2, tuple2._1)
+        );
+        /*
+        JavaPairRDD<Integer, String> keyValueConvertPairRDD = wordsCount.mapToPair(
+                new PairFunction<Tuple2<String, Integer>, Integer, String>() {
+            public Tuple2<Integer, String> call(Tuple2<String, Integer> stringIntegerTuple2) throws Exception {
+                return new Tuple2<Integer, String>(stringIntegerTuple2._2,stringIntegerTuple2._1);
+            }
+        });*/
+
+        /**
+         * 按key倒叙排(降序)
+         */
+        JavaPairRDD<Integer, String> wc2 = keyValueConvertPairRDD.sortByKey(false);
+
+
+        wc2.foreach(tuple2 -> System.out.println(tuple2._1 + ":::" +tuple2._2));
+        /*
         wordsCount.foreach(new VoidFunction<Tuple2<String, Integer>>() {
             public void call(Tuple2<String, Integer> pairs) throws Exception {
                 System.out.println(pairs._1 + " : " + pairs._2);
             }
-        });
+        });*/
         sc.close();
     }
 }
