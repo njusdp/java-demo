@@ -3,7 +3,12 @@ package com.kaka.controller;
 import com.baidu.mobileopen.library.json.GsonUtils;
 import com.baidu.mobileopen.library.log.Logger;
 import com.baidu.mobileopen.library.log.LoggerFactory;
+import com.kaka.dao.UserMapper;
+import com.kaka.model.User;
+import com.kaka.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.annotation.Resource;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -19,7 +24,8 @@ import java.io.IOException;
 public class AudioSearchController extends HttpServlet{
     private static final long serialVersionUID = 1L;
 
-
+    @Resource(name = "userService")
+    private UserService userService;
 
     private static final Logger logger = LoggerFactory.getLogger(AudioSearchController.class);
 
@@ -40,7 +46,7 @@ public class AudioSearchController extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("/audio/search start").add("request", GsonUtils.toJson(request.getParameterMap())).end();
+        logger.info("/audio/search doPost start").add("request", GsonUtils.toJson(request.getParameterMap())).end();
 
         //System.out.println("tpId:" + request.getParameter("tpId"));
         // 根据request创建Bot
@@ -77,7 +83,7 @@ public class AudioSearchController extends HttpServlet{
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        logger.info("/audio/search start").add("request", GsonUtils.toJson(request.getParameterMap())).end();
+        logger.info("/audio/search doGet start").add("request", GsonUtils.toJson(request.getParameterMap())).end();
 
         //System.out.println("tpId:" + request.getParameter("tpId"));
         // 根据request创建Bot
@@ -100,7 +106,18 @@ public class AudioSearchController extends HttpServlet{
             response.getWriter().append("{\"status\":1,\"msg\":\"\"}");
         }
 */
-        response.getWriter().append("sdfsdfsssss");
+
+        String id = "1";
+
+       // userService = new UserService();
+        User user = userService.getUserById(id);
+
+
+        logger.info("/audio/search doGet username").add("username",user.getName()).end();
+
+
+
+        response.getWriter().append("lakjdflaskdfj;alf");
 
         //char[] responseToSend = new char[response.getBufferSize()];
         //response.getWriter().write(responseToSend);
