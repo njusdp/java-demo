@@ -11,7 +11,7 @@ public class ClassWithMethods {
 
     int msg2() {
         System.out.println("msg2() invoked");
-        return 8;
+        return 4;
     }
 
     void msg3() {
